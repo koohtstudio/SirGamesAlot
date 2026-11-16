@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { EventsLayout } from '@/components/public/EventsLayout';
-import { PageHero } from '@/components/public/Sections';
+import { PageHero, PaintedGallery } from '@/components/public/Sections';
 import sections from '@/components/public/Sections.module.css';
 import { getRepository } from '@/lib/data';
 import { isUpcoming } from '@/lib/events/events';
@@ -8,7 +8,7 @@ import { isUpcoming } from '@/lib/events/events';
 export const metadata: Metadata = {
   title: 'Events',
   description:
-    'Warhammer tournaments, paint nights, Riftbound league, D&D one-shots and our yearly anniversary event at Sir Games-A-Lot in Barrie. See dates, costs and seats left.',
+    'Paint nights, paint contests, Warhammer tournaments, cosplay days and our yearly anniversary event at Sir Games-A-Lot in Barrie. See dates, costs and seats left.',
   alternates: { canonical: '/events' },
 };
 
@@ -23,8 +23,9 @@ export default async function EventsPage() {
   return (
     <>
       <PageHero kicker="Events" title="Sales, cosplay & game days">
-        Every event is on one calendar, with times, costs and seats. Save a seat, add it to your
-        calendar, or join the waitlist when it&apos;s full.
+        Paint nights, paint contests, tournaments and cosplay days, on one calendar with times,
+        costs and seats. Save a seat, add it to your calendar, or join the waitlist when it&apos;s
+        full.
       </PageHero>
       <div className={`wrap ${sections.pageBody}`}>
         <EventsLayout
@@ -33,6 +34,10 @@ export default async function EventsPage() {
           nowIso={now.toISOString()}
           anniversaryLabel={settings.nextAnniversaryLabel}
         />
+        <h2 className={sections.sectionTitle} style={{ marginTop: 48 }}>
+          Painted in the shop
+        </h2>
+        <PaintedGallery />
       </div>
     </>
   );

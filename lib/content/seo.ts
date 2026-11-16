@@ -13,7 +13,6 @@ export function storeJsonLd(settings: Pick<Settings, 'weeklyHours'>) {
     url: SITE_URL,
     telephone: '+1-705-719-1291',
     email: STORE.email,
-    foundingDate: String(STORE.foundedYear),
     address: {
       '@type': 'PostalAddress',
       streetAddress: STORE.streetAddress,
@@ -24,9 +23,18 @@ export function storeJsonLd(settings: Pick<Settings, 'weeklyHours'>) {
     },
     openingHoursSpecification: openingHoursSpecification(settings.weeklyHours),
     sameAs: [STORE.facebook, STORE.instagram],
+    image: `${SITE_URL}/images/og.jpg`,
     priceRange: '$$',
   };
 }
+
+/** Shared by the root layout and pages, so every share card has the same size and alt text. */
+export const OG_IMAGE = {
+  url: '/images/og.jpg',
+  width: 1200,
+  height: 630,
+  alt: 'The Sir Games-A-Lot storefront in Bayfield Mall, Barrie, above the store name on a royal-blue banner.',
+};
 
 export function eventJsonLd(event: StoreEvent, seatsLeft: number | null) {
   const soldOut = seatsLeft !== null && seatsLeft <= 0;

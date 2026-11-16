@@ -1,5 +1,5 @@
 .s {
-  padding-block: 64px;
+  padding-block: var(--space-7);
   border-bottom: 3px solid var(--ink);
 }
 
@@ -9,7 +9,7 @@
   align-items: flex-end;
   gap: 20px;
   flex-wrap: wrap;
-  margin-bottom: 28px;
+  margin-bottom: var(--space-4);
 }
 
 .sh h2,
@@ -54,7 +54,8 @@
 
 .bannerH1 {
   margin: 0;
-  font-size: clamp(40px, 9.6vw, 118px);
+  /* The sign text is about 10 times its font size wide, so size it to the space it has: never clipped. */
+  font-size: clamp(24px, calc((100vw - 40px) / 10.4), 106px);
   line-height: 1;
 }
 
@@ -75,79 +76,82 @@
 
 .heroBody {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
-  gap: 36px;
-  align-items: start;
-  padding-block: 40px 48px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: center;
+  padding-block: var(--space-5) var(--space-6);
 }
 
-.heroBody h2 {
+.heroText {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.heroLead {
   font-family: var(--display);
-  font-weight: 400;
   font-size: clamp(30px, 4.2vw, 50px);
   line-height: 1.05;
   text-transform: uppercase;
+  text-wrap: balance;
 }
 
-.heroBody h2 em {
+.heroLead em {
   font-style: normal;
   color: var(--red);
 }
 
-.heroBody p {
+.heroCopy {
   font-size: 18px;
   color: var(--gray);
   max-width: 52ch;
-  margin-top: 16px;
 }
 
 .ctas {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 26px;
+  gap: var(--space-2) 14px;
 }
 
-.creds {
-  margin: 0;
-  border: 3px solid var(--ink);
-  box-shadow: 6px 6px 0 var(--ink);
-  background: #fff;
+.heroPhoto {
+  justify-self: stretch;
 }
 
-.creds div {
-  padding: 16px 18px;
-  border-bottom: 3px solid var(--ink);
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
+.status {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  border-top: 2px dashed var(--soft);
+  padding-top: var(--space-3);
 }
 
-.creds div:last-child {
-  border-bottom: 0;
+.statusLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
 }
 
-.creds dt {
-  font-family: var(--display);
-  font-size: 30px;
-  line-height: 1;
+.statusLine i {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--ink);
+  background: var(--soft);
 }
 
-.creds dd {
-  margin: 0;
-  font-size: 14px;
+.statusLine i.on {
+  background: var(--green);
+}
+
+.statusHours {
+  font-size: 14.5px;
   color: var(--gray);
-  text-align: right;
+  max-width: 60ch;
 }
 
-.creds div:first-child {
-  background: var(--red);
-  color: #fff;
-}
-
-.creds div:first-child dd {
-  color: #fff;
+.call {
+  min-height: 44px;
 }
 
 /* aisles */
@@ -164,10 +168,10 @@
   border: 3px solid var(--ink);
   background: #fff;
   box-shadow: 5px 5px 0 var(--ink);
-  padding: 18px;
+  padding: var(--space-3);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -217,6 +221,31 @@
 
 .new a {
   color: var(--red);
+}
+
+/* aisle tour and painted gallery */
+.tour {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  align-items: start;
+}
+
+.gallery {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.galleryNote {
+  margin-top: var(--space-3);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray);
 }
 
 /* reviews */
@@ -320,6 +349,10 @@
   .revs {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .tour {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 480px) {
@@ -327,7 +360,12 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
   .s {
-    padding-block: 48px;
+    padding-block: var(--space-6);
   }
 }

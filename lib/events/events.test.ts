@@ -85,14 +85,19 @@ describe('event list and history', () => {
     expect(upcoming.map((e) => e.date)).not.toContain('2025-11-15');
   });
   it('lists history newest first', () => {
-    expect(past.map((e) => e.date)).toEqual(['2026-05-16', '2025-11-15', '2025-05-03']);
+    expect(past.map((e) => e.date)).toEqual([
+      '2026-05-16',
+      '2025-11-15',
+      '2025-05-03',
+      '2024-05-04',
+    ]);
   });
   it('generates occurrences from series rules', () => {
     const tournaments = upcoming.filter((e) => e.seriesId === 'ser-40k').map((e) => e.date);
     expect(tournaments[0]).toBe('2026-11-21');
     expect(tournaments).toContain('2026-12-19');
     const paint = upcoming.filter((e) => e.seriesId === 'ser-paint').map((e) => e.date);
-    expect(paint[0]).toBe('2026-11-26');
+    expect(paint[0]).toBe('2026-11-24'); // last Tuesday of the month
     const dnd = upcoming.filter((e) => e.seriesId === 'ser-dnd').map((e) => e.date);
     expect(dnd.slice(0, 3)).toEqual(['2026-11-13', '2026-11-20', '2026-11-27']);
   });

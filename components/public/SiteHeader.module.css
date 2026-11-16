@@ -36,15 +36,17 @@
 .top {
   background: #fff;
   border-bottom: 3px solid var(--ink);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .topInner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px 20px;
-  padding-block: 12px;
-  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  padding-block: 10px;
 }
 
 .miniSign {
@@ -55,6 +57,8 @@
   padding: 6px 12px;
   text-decoration: none;
   box-shadow: 3px 3px 0 var(--ink);
+  min-height: 44px;
+  flex: none;
 }
 
 .miniText {
@@ -66,15 +70,16 @@
 .nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 20px;
+  gap: 0 var(--space-4);
   font-weight: 700;
   font-size: 15px;
+  margin-right: auto;
 }
 
 .nav a {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
+  min-height: 44px;
   color: var(--ink);
   text-decoration: none;
   border-bottom: 3px solid transparent;
@@ -88,8 +93,7 @@
 .right {
   display: flex;
   align-items: center;
-  gap: 8px 16px;
-  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
 }
 
 .phone {
@@ -98,7 +102,14 @@
   color: var(--ink);
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  text-decoration: none;
+}
+
+.phoneCall {
+  display: none;
 }
 
 .open {
@@ -121,10 +132,133 @@
   background: var(--green);
 }
 
+.openShort,
+.menuBtn {
+  display: none;
+}
+
+.menuBtn {
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--ink);
+  background: var(--yellow);
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0;
+  flex: none;
+}
+
 @media (max-width: 860px) {
-  .nav {
+  .topInner {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding-block: 8px;
+  }
+
+  .miniText {
+    font-size: 17px;
+  }
+
+  .miniSign {
+    padding: 4px 10px;
+    margin-right: auto;
+  }
+
+  /* One compact row: sign, open dot, Call, menu. The links open below it. */
+  .right {
+    order: 2;
+    gap: var(--space-2);
+  }
+
+  .menuBtn {
+    display: inline-flex;
     order: 3;
+  }
+
+  .nav {
+    display: none;
+    order: 4;
     width: 100%;
-    gap: 2px 16px;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    border-top: 2px dashed var(--soft);
+    padding-block: var(--space-2);
+  }
+
+  .navOpen {
+    display: flex;
+  }
+
+  .nav a {
+    min-height: 48px;
+    border-bottom-width: 0;
+    border-left: 4px solid transparent;
+    padding-left: 10px;
+  }
+
+  .nav a:hover,
+  .nav a[aria-current='page'] {
+    border-color: var(--red);
+  }
+
+  .openFull,
+  .phoneNum {
+    display: none;
+  }
+
+  .openShort {
+    display: inline;
+  }
+
+  .phone {
+    background: var(--yellow);
+    border: 3px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    padding: 0 14px;
+    font-family: var(--display);
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+
+  .phoneCall {
+    display: inline;
+  }
+}
+
+@media (max-width: 400px) {
+  /* Smallest phones: keep sign, dot, Call and menu on one row. The hero repeats the full status. */
+  .topInner {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  .nav {
+    flex: 1 0 100%;
+  }
+
+  .miniText {
+    font-size: 14px;
+  }
+
+  .miniSign {
+    padding: 4px 8px;
+    min-width: 0;
+  }
+
+  .phone {
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .openShort {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
 }

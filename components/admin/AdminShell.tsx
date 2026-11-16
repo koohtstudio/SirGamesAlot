@@ -12,6 +12,8 @@ import styles from './Admin.module.css';
 
 const NAV = [
   { href: '/admin/today', label: 'Today' },
+  { href: '/admin/orders', label: 'Online orders' },
+  { href: '/admin/payments', label: 'Counter payments' },
   { href: '/admin/stock', label: 'Stock' },
   { href: '/admin/holds', label: 'Holds & orders' },
   { href: '/admin/events', label: 'Events' },
@@ -126,7 +128,8 @@ function RolePicker() {
         <button type="button" className={styles.pickCard} onClick={() => setRole('staff')}>
           <b>Staff</b>
           <span>
-            Holds, special orders, event check-in and stock overrides. No exports, no settings.
+            Holds, special orders, online orders and counter payments, event check-in and stock
+            overrides. No exports, no settings, no undoing payments.
           </span>
         </button>
       </div>

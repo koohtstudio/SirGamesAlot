@@ -197,6 +197,10 @@ export interface BannerSettings {
 
 export interface Settings {
   banner: BannerSettings;
+  /** Online orders (a basket you pay for at the counter). Off hides the basket everywhere. */
+  onlineOrdersEnabled: boolean;
+  /** How long a ready order is kept for pickup, in hours. */
+  orderHoldHours: number;
   weeklyHours: WeeklyHours;
   holidayOverrides: HolidayOverride[];
   /** How long a website hold is kept, in hours. */
@@ -214,11 +218,68 @@ export interface OutboxMessage {
     | 'order-arrived'
     | 'event-confirmation'
     | 'event-promoted'
+    | 'order-received'
+    | 'order-ready'
+    | 'order-cancelled'
     | 'other';
   to: string;
   subject: string;
   body: string;
   createdAt: string;
+}
+
+/**
+ * Online orders: the customer fills a basket on the website and pays at the counter when they pick up.
+ * Nothing is ever charged online. placed → ready → completed (paid at the counter), or cancelled.
+ */
+export const ORDER_STATUSES = ['placed', 'ready', 'completed', 'cancelled'] as const;
+export type OnlineOrderStatus = (typeof ORDER_STATUSES)[number];
+
+export const PAYMENT_METHODS = ['cash', 'debit', 'credit', 'gift-card', 'other'] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export interface OrderLine {
+  sku: string;
+  /** Name and price are copied from the POS when the order is placed, so later price changes never rewrite it. */
+  name: string;
+  unitPriceCents: number;
+  qty: number;
+}
+
+/** Money taken at the counter. The amount is always the order total; there are no part payments. */
+export interface CounterPayment {
+  method: PaymentMethod;
+  amountCents: number;
+  /** Cash only: what the customer handed over. Change due is tendered minus the amount. */
+  tenderedCents?: number;
+  /** Optional: terminal receipt number, last four digits, gift card number. */
+  reference?: string;
+  takenAt: string;
+  takenBy: Role;
+}
+
+export interface OnlineOrder {
+  id: string;
+  /** Shown to the customer and staff, like SGL-1042. */
+  number: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  /** The customer's note. */
+  note?: string;
+  /** Staff-only note. */
+  staffNote?: string;
+  lines: OrderLine[];
+  status: OnlineOrderStatus;
+  createdAt: string;
+  readyAt?: string;
+  /** Set when the order becomes ready: readyAt plus the pickup hold length. */
+  holdUntil?: string;
+  completedAt?: string;
+  cancelledAt?: string;
+  cancelledBy?: 'customer' | 'staff';
+  cancelReason?: string;
+  payment?: CounterPayment;
 }
 
 export type Role = 'owner' | 'staff';

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Archivo, Archivo_Black, Bangers } from 'next/font/google';
 import { headers } from 'next/headers';
 import { ToastProvider } from '@/components/ui/Toast';
+import { OG_IMAGE } from '@/lib/content/seo';
 import { ALLOW_INDEXING, SITE_URL, STORE } from '@/lib/content/store';
 import './globals.css';
 
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
     template: `%s | ${STORE.name}`,
   },
   description:
-    "Barrie's independent game and hobby store since 2005: board games, D&D and RPGs, Warhammer and Citadel paints, StarCraft minis, trading card games and a free in-store playspace. Lower level of the Bayfield Mall.",
+    "Barrie's independent game and hobby store: board games, D&D and RPGs, Warhammer and Citadel paints, StarCraft minis, trading card games and an in-store gaming room. Lower level of the Bayfield Mall, near Bowlerama.",
   applicationName: STORE.name,
   alternates: { canonical: '/' },
   openGraph: {
@@ -43,6 +44,14 @@ export const metadata: Metadata = {
     title: `${STORE.name} | Barrie's game and hobby store`,
     description:
       'Check stock, hold an item, save a seat at an event. Lower level, Bayfield Mall, Barrie.',
+    images: [OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${STORE.name} | Barrie's game and hobby store`,
+    description:
+      'Check stock, hold an item, save a seat at an event. Lower level, Bayfield Mall, Barrie.',
+    images: [{ url: OG_IMAGE.url, alt: OG_IMAGE.alt }],
   },
   // While the site shows sample data it must never be indexed as the real store. See docs/SECURITY.md.
   robots: ALLOW_INDEXING ? { index: true, follow: true } : { index: false, follow: false },

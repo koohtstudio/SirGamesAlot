@@ -17,6 +17,8 @@ import { formatEventDate, isUpcoming } from '@/lib/events/events';
 import { seatSummary } from '@/lib/events/seats';
 import { formatTime } from '@/lib/hours/hours';
 import { formatFee } from '@/lib/money';
+import type { PhotoLite } from '@/lib/content/photos';
+import { EventThumb } from './EventThumb';
 import { SeatMeter } from './SeatMeter';
 
 // Loaded on demand, like the stock request form.
@@ -40,11 +42,13 @@ export function EventCard({
   signups,
   onSave,
   headingLevel = 3,
+  photo,
 }: {
   event: StoreEvent;
   signups: EventSignup[];
   onSave: (e: StoreEvent) => void;
   headingLevel?: 3 | 4;
+  photo?: PhotoLite;
 }) {
   const summary = seatSummary(
     event.capacity,
@@ -59,15 +63,18 @@ export function EventCard({
         <div className={styles.w}>{formatEventDate(event, 'EEE')}</div>
       </div>
       <div className={styles.body}>
-        <Heading className={styles.title}>
-          <Link href={`/events/${event.slug}`}>{event.title}</Link>
-        </Heading>
-        <div className={styles.info}>
-          {formatEventDate(event, 'EEEE, MMM d')} · {formatTime(event.startTime)} –{' '}
-          {formatTime(event.endTime)}
-          {event.note ? ` · ${event.note}` : ''}
+        {photo && <EventThumb photo={photo} />}
+        <div className={styles.text}>
+          <Heading className={styles.title}>
+            <Link href={`/events/${event.slug}`}>{event.title}</Link>
+          </Heading>
+          <div className={styles.info}>
+            {formatEventDate(event, 'EEEE, MMM d')} · {formatTime(event.startTime)} –{' '}
+            {formatTime(event.endTime)}
+            {event.note ? ` · ${event.note}` : ''}
+          </div>
+          <SeatMeter summary={summary} />
         </div>
-        <SeatMeter summary={summary} />
       </div>
       <div className={styles.act}>
         <span className={styles.fee}>{formatFee(event.feeCents)}</span>
@@ -102,10 +109,13 @@ export function EventsExplorer({
   initialNowIso,
   limit,
   headingLevel = 3,
+  photos = {},
 }: {
   initialEvents: StoreEvent[];
   initialSignups: EventSignup[];
   initialNowIso: string;
+  /** Event photos by `seriesId ?? id`, built on the server. */
+  photos?: Record<string, PhotoLite>;
   /** Home page shows the next few; /events shows everything. */
   limit?: number;
   headingLevel?: 3 | 4;
@@ -154,6 +164,7 @@ export function EventsExplorer({
               signups={signups}
               onSave={setDialog}
               headingLevel={headingLevel}
+              photo={photos[e.seriesId ?? e.id]}
             />
           ))}
         </ul>

@@ -12,6 +12,8 @@ import { seatSummary } from '@/lib/events/seats';
 import { STORE } from '@/lib/content/store';
 import { formatTime } from '@/lib/hours/hours';
 import { formatFee } from '@/lib/money';
+import Image from 'next/image';
+import type { PhotoLite } from '@/lib/content/photos';
 import { SeatMeter } from './SeatMeter';
 
 // Loaded on demand, like the stock request form.
@@ -24,11 +26,14 @@ export function EventDetail({
   initialEvent,
   initialSignups,
   initialNowIso,
+  photo,
 }: {
   slug: string;
   initialEvent: StoreEvent | null;
   initialSignups: EventSignup[];
   initialNowIso: string;
+  /** Real event photo (or flyer), chosen on the server. Events added in the demo admin have none. */
+  photo?: PhotoLite;
 }) {
   // Events added in the admin demo only exist in this browser, so look the slug up here too.
   const event = useRepoData((r) => r.getEventBySlug(slug), initialEvent);
@@ -63,6 +68,20 @@ export function EventDetail({
           {formatEventDate(event)} · {formatTime(event.startTime)} – {formatTime(event.endTime)}
         </p>
       </div>
+      {photo && (
+        <figure className={styles.photo} style={{ backgroundColor: photo.dominant }}>
+          <Image
+            src={photo.src}
+            alt={photo.alt}
+            width={photo.width}
+            height={photo.height}
+            sizes="(max-width: 760px) 100vw, 760px"
+            priority
+            placeholder="blur"
+            blurDataURL={photo.blur}
+          />
+        </figure>
+      )}
       <div className={styles.body}>
         <p>{event.description || event.note}</p>
         <dl className={styles.facts}>

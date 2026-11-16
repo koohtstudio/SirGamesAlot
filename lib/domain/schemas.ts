@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CATEGORIES, EVENT_TYPES, INTERESTS } from './types';
+import { CATEGORIES, EVENT_TYPES, INTERESTS, PAYMENT_METHODS } from './types';
 
 // Our CSP forbids eval. zod's just-in-time mode probes for it, which would log a CSP issue in the
 // browser. Turning it off costs nothing for forms this small.
@@ -51,6 +51,41 @@ export const backInStockSchema = contact
   .extend({ sku: z.string().min(1) })
   .refine(needsContact, contactMessage);
 export type BackInStockInput = z.infer<typeof backInStockSchema>;
+
+/** A basket checkout. Only sku and quantity come from the browser: names and prices are looked up from the POS. */
+export const MAX_QTY_PER_LINE = 10;
+export const MAX_LINES_PER_ORDER = 20;
+export const basketOrderSchema = contact
+  .extend({
+    lines: z
+      .array(
+        z.object({
+          sku: z.string().min(1),
+          qty: z
+            .number()
+            .int('Quantity must be a whole number.')
+            .min(1, 'Quantity must be at least 1.')
+            .max(MAX_QTY_PER_LINE, `You can order up to ${MAX_QTY_PER_LINE} of each item online.`),
+        }),
+      )
+      .min(1, 'Your basket is empty.')
+      .max(MAX_LINES_PER_ORDER, 'That is a lot of different items. Please call us instead.'),
+    note: z.string().trim().max(400).default(''),
+  })
+  .refine(needsContact, contactMessage);
+export type BasketOrderInput = z.infer<typeof basketOrderSchema>;
+
+export const counterPaymentSchema = z.object({
+  method: z.enum(PAYMENT_METHODS),
+  /** Cash only, in cents. Ignored for other methods. */
+  tenderedCents: z.number().int().min(0).max(10_000_000).optional(),
+  reference: z.string().trim().max(40, 'Keep the reference under 40 characters.').default(''),
+});
+export type CounterPaymentInput = z.infer<typeof counterPaymentSchema>;
+
+export const cancelOrderSchema = z.object({
+  reason: z.string().trim().max(160, 'Keep the reason under 160 characters.').default(''),
+});
 
 export const signupSchema = z.object({
   eventId: z.string().min(1),

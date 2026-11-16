@@ -11,9 +11,17 @@ export const STORE = {
   postalCode: 'L4M 3C1',
   country: 'CA',
   fullAddress: '320 Bayfield Street, Barrie, ON L4M 3C1',
-  locationNote: 'Lower level, Bayfield Mall · next to Bowlerama and Service Ontario',
+  locationNote: 'Lower level of Bayfield Mall · near Bowlerama',
+  sizeNote: '4,100 square feet with a gaming room inside the store',
   facebook: 'https://www.facebook.com/profile.php?id=100057495547644',
   instagram: 'https://www.instagram.com/iamsirgamesalot/',
+  /** Google rating, from the store's Google listing. Needs a refresh before launch. */
+  googleRating: '4.6',
+  googleReviewCount: 419,
+  /**
+   * Not shown anywhere and not sent to search engines. The store's own posts call 2024 its 20th and
+   * 2026 its 21st anniversary, which does not match 2005. Confirm with the owner (docs/CONTENT_TODO.md).
+   */
   foundedYear: 2005,
 } as const;
 

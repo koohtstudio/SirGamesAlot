@@ -16,7 +16,9 @@ export function OpenNow({
   return (
     <span className={styles.open} data-testid="open-now">
       <i className={status.open ? styles.on : ''} aria-hidden="true" />
-      <span>{status.text}</span>
+      {/* Full sentence on wide screens; one word on phones, so the Call button always fits. */}
+      <span className={styles.openFull}>{status.text}</span>
+      <span className={styles.openShort}>{status.open ? 'Open' : 'Closed'}</span>
     </span>
   );
 }

@@ -47,6 +47,16 @@
   Restore is practised once before launch.
 - **Monitoring**: Sentry (errors) and an uptime monitor with email alerts.
 
+### Online orders and payments
+
+- No card or bank data is ever collected or stored. Customers pay in the store; staff record the method and amount.
+  That keeps the site out of PCI scope. Do not add a card form without a payment provider's hosted fields.
+- The browser sends only `sku` and `qty`. Prices are read server-side, so a tampered request cannot change what is
+  charged at the counter.
+- `/order/<id>` is a link anyone holding the id can open (it shows a name, items and status). Phase 2: signed token,
+  rate limiting, and no personal data beyond first name and items.
+- Taking and undoing payments is an audit event (who, when, method, amount). Undo is owner-only.
+
 ### CASL (Canada's anti-spam law)
 
 - Hold, order and event confirmations, "your order is in" and "a seat opened up" are **transactional** and need no

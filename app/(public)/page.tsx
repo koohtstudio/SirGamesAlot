@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Aisles, Hero, Reviews } from '@/components/public/Sections';
+import { AisleTour, Aisles, Hero, PaintedGallery, Reviews } from '@/components/public/Sections';
 import sections from '@/components/public/Sections.module.css';
 import { D20Roller } from '@/components/public/D20Roller';
 import { EventsLayout } from '@/components/public/EventsLayout';
@@ -28,7 +28,7 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={storeJsonLd(settings)} />
-      <Hero />
+      <Hero settings={settings} nowIso={nowIso} />
 
       <section className={`${sections.s} dots`} aria-labelledby="aisles-title">
         <div className="wrap">
@@ -42,7 +42,21 @@ export default async function HomePage() {
               ask.
             </p>
           </div>
+          <AisleTour />
           <Aisles />
+        </div>
+      </section>
+
+      <section className={sections.s} aria-labelledby="painted-title">
+        <div className="wrap">
+          <div className={sections.sh}>
+            <div>
+              <div className="kick">The hobby side</div>
+              <h2 id="painted-title">Painted in the shop</h2>
+            </div>
+            <p>Monthly paint nights, paint contests and a games room to work at.</p>
+          </div>
+          <PaintedGallery />
         </div>
       </section>
 
@@ -75,8 +89,8 @@ export default async function HomePage() {
               <h2 id="events-title">Sales, cosplay &amp; game days</h2>
             </div>
             <p>
-              Every event is on one calendar now, with times, costs and seats, instead of buried in
-              comments.
+              Paint nights, cosplay days, tournaments and game releases, with times, costs and seats
+              on one calendar.
             </p>
           </div>
           <EventsLayout
@@ -115,8 +129,8 @@ export default async function HomePage() {
               <h2 id="visit-title">Lower level, Bayfield Mall</h2>
             </div>
             <p>
-              Near Bowlerama and Service Ontario. Main doors are closed for construction, so use the
-              Coulter Street side.
+              Near Bowlerama, 4,100 square feet with a gaming room inside. Hours, phone and
+              directions below.
             </p>
           </div>
           <VisitSection settings={settings} nowIso={nowIso} />
