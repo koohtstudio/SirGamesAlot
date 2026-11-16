@@ -98,8 +98,6 @@ describe('event list and history', () => {
     expect(tournaments).toContain('2026-12-19');
     const paint = upcoming.filter((e) => e.seriesId === 'ser-paint').map((e) => e.date);
     expect(paint[0]).toBe('2026-11-24'); // last Tuesday of the month
-    const dnd = upcoming.filter((e) => e.seriesId === 'ser-dnd').map((e) => e.date);
-    expect(dnd.slice(0, 3)).toEqual(['2026-11-13', '2026-11-20', '2026-11-27']);
   });
   it('keeps the holiday event on the third Saturday of November', () => {
     expect(upcoming.find((e) => e.id === 'evt-holiday')!.date).toBe('2026-11-21');

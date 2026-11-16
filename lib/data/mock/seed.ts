@@ -79,8 +79,9 @@ const series = (): EventSeries[] => [
     rule: { kind: 'nth-weekday', weekday: 6, nth: 3 },
     startTime: '10:00',
     endTime: '18:00',
-    capacity: 16,
+    capacity: 24,
     feeCents: 2500,
+    sample: true,
     note: 'Sample date and fee · 24 players at the last one',
     description:
       'Warhammer 40,000 tournaments run in the store: the last one had 24 players, with casual 40K, an Age of Sigmar league and a D&D table going at the same time. Date, fee and format here are examples until the owner confirms them.',
@@ -94,35 +95,10 @@ const series = (): EventSeries[] => [
     endTime: '20:30',
     capacity: 12,
     feeCents: 0,
+    sample: true,
     note: 'Free with your own paints · $5 rental supplies',
     description:
       'Our monthly Paint Night, on a Tuesday from 5:30 to 8:30. Work on anything: Warhammer, D&D, Middle-earth, Battletech, historical minis or minis from board games. Newcomers and veteran painters are both welcome, and staff can show you paint thinning, contrast painting, shading, dry-brushing, highlighting and slap-chop. Rental supplies are $5 if you have none; bring your own paints and brushes and it is free. Which Tuesday of the month and the seat count are examples until confirmed.',
-  },
-  {
-    id: 'ser-riftbound',
-    title: 'Riftbound league night',
-    type: 'cards',
-    rule: { kind: 'nth-weekday', weekday: 5, nth: 2 },
-    startTime: '18:00',
-    endTime: '22:00',
-    capacity: 24,
-    feeCents: 1000,
-    note: 'Sample event · League of Legends TCG',
-    description:
-      'Riftbound booster packs launched in the store and sold out fast. This league night is an example of what could run next; there is no confirmed league yet.',
-  },
-  {
-    id: 'ser-dnd',
-    title: 'D&D one-shot',
-    type: 'dnd',
-    rule: { kind: 'weekly', weekday: 5 },
-    startTime: '18:30',
-    endTime: '22:00',
-    capacity: 6,
-    feeCents: 1000,
-    note: 'Sample event · new players welcome',
-    description:
-      'An example of a drop-in Dungeons & Dragons one-shot. The store has D&D tables running on busy event days (nine adventurers at the last tournament), but a weekly one-shot is not confirmed.',
   },
 ];
 
@@ -148,6 +124,7 @@ const oneOffs = (now: Date): OneOffEvent[] => [
     endTime: '17:00',
     capacity: 0,
     feeCents: 0,
+    sample: true,
     note: 'Sample date · sales, vendors, cosplay contest',
     description:
       'Last year the store ran a November event on Saturday, Nov 15 with local vendors for Christmas gifts, gaming, snacks, sales and a cosplay contest at 2 pm. This date is an example for this year. Flyers say: take 10% off, or roll a d20 for a chance at 1 to 20% off.',
@@ -182,9 +159,9 @@ const oneOffs = (now: Date): OneOffEvent[] => [
   },
   {
     id: 'evt-past-20',
-    slug: '20th-anniversary-event-2025-05-03',
+    slug: 'anniversary-event-2025-05-03',
     date: '2025-05-03',
-    title: '20th Anniversary Event',
+    title: 'Anniversary Event',
     type: 'store',
     startTime: '10:00',
     endTime: '17:00',

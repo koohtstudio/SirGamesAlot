@@ -164,8 +164,8 @@ export class MockRepository implements DataRepository {
       if (e.capacity <= 0 || e.endsAt <= now || s.seededEvents.includes(e.id)) continue;
       const isFirstOfSeries = e.seriesId !== undefined && !firstOfSeries.has(e.seriesId);
       if (e.seriesId) firstOfSeries.add(e.seriesId);
-      // The first D&D one-shot is full, so the waitlist flow is visible in the demo.
-      const full = isFirstOfSeries && e.seriesId === 'ser-dnd';
+      // The first 40K tournament is full, so the waitlist flow is visible in the demo.
+      const full = isFirstOfSeries && e.seriesId === 'ser-40k';
       const taken = full
         ? e.capacity
         : Math.min(e.capacity - 1, Math.round(e.capacity * (0.25 + 0.65 * hash01(e.id))));

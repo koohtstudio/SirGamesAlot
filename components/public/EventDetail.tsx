@@ -83,6 +83,13 @@ export function EventDetail({
         </figure>
       )}
       <div className={styles.body}>
+        {event.sample && (
+          <p>
+            <span className="sample">
+              Sample listing: the date, cost and seats are examples until the store confirms them.
+            </span>
+          </p>
+        )}
         <p>{event.description || event.note}</p>
         <dl className={styles.facts}>
           <div>

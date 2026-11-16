@@ -155,6 +155,12 @@ export function StockChecker({
         ))}
       </div>
 
+      <p className={styles.note}>
+        <span className="sample">
+          Sample stock and prices. The live version syncs with the store&apos;s real counts.
+        </span>
+      </p>
+
       <div className={styles.meta}>
         <span role="status" aria-live="polite">
           {all.length === products.length
@@ -226,12 +232,7 @@ export function StockChecker({
           </Button>
         </p>
       )}
-      <p className={styles.note}>
-        <span className="sample">
-          Demo shows sample stock and prices. The live version syncs with the store&apos;s real
-          counts.
-        </span>
-      </p>
+
       <p className={styles.fine}>
         Prices are before HST (13%). Holds are kept for {settings.holdHours} hours. Baskets are paid
         for at the counter when you pick up. No online payment.

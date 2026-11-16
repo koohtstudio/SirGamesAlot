@@ -95,9 +95,12 @@ test('a full event offers the waitlist, and admin can promote when a seat opens'
   page,
 }) => {
   await page.goto('/events');
-  const card = page.getByTestId('event-card').filter({ hasText: 'D&D one-shot' }).first();
+  const card = page
+    .getByTestId('event-card')
+    .filter({ hasText: 'Warhammer 40K tournament' })
+    .first();
   await expect(card.getByTestId('seat-text')).toContainText('Full');
-  await card.getByRole('button', { name: /^Join the waitlist: D&D one-shot/ }).click();
+  await card.getByRole('button', { name: /^Join the waitlist: Warhammer 40K tournament/ }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Your name').fill('Wait Lister');
   await dialog.getByLabel('Email').fill('wait@example.test');
@@ -106,7 +109,7 @@ test('a full event offers the waitlist, and admin can promote when a seat opens'
   await dialog.getByRole('button', { name: 'Close', exact: true }).last().click();
 
   // The same email cannot take a second spot.
-  await card.getByRole('button', { name: /^Join the waitlist: D&D one-shot/ }).click();
+  await card.getByRole('button', { name: /^Join the waitlist: Warhammer 40K tournament/ }).click();
   await dialog.getByLabel('Your name').fill('Wait Lister');
   await dialog.getByLabel('Email').fill('WAIT@example.test');
   await dialog.getByRole('button', { name: 'Save my seat' }).click();
@@ -117,7 +120,7 @@ test('a full event offers the waitlist, and admin can promote when a seat opens'
 
   await signInAs(page, 'Owner', '/admin/events');
   await page
-    .getByRole('button', { name: /Manage sign-ups for D&D one-shot/ })
+    .getByRole('button', { name: /Manage sign-ups for Warhammer 40K tournament/ })
     .first()
     .click();
   const waitRow = page.getByTestId('attendee-row').filter({ hasText: 'Wait Lister' });
@@ -138,7 +141,7 @@ test('past events never show as upcoming; they are in the history strip', async 
   const cards = page.getByTestId('event-card');
   await expect(cards.first()).toBeVisible();
   const all = await cards.allTextContents();
-  expect(all.join(' ')).not.toMatch(/21st Anniversary|Nightmare Before Christmas|20th Anniversary/);
+  expect(all.join(' ')).not.toMatch(/Anniversary Event|Nightmare Before Christmas/);
   const history = page.getByRole('region', { name: 'Event history' });
   await expect(history).toContainText('21st Anniversary Event');
   await expect(history).toContainText('Nightmare Before Christmas Event');
@@ -475,4 +478,15 @@ test.describe('online orders: basket online, pay at the counter', () => {
     await expect(page.getByRole('heading', { name: /Order SGL-/ })).toBeVisible();
     await expectNoSeriousA11yIssues(page);
   });
+});
+
+test('unconfirmed events and the sample stock are labelled for everyone, not just reviewers', async ({
+  page,
+}) => {
+  await page.goto('/events');
+  await expect(page.getByText('Sample listing').first()).toBeVisible();
+  await expect(page.getByText(/Events marked Sample are examples/)).toBeVisible();
+  await expect(page.getByText('Riftbound league night')).toHaveCount(0);
+  await page.goto('/stock');
+  await expect(page.getByText(/Sample stock and prices/)).toBeVisible();
 });

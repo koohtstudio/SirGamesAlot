@@ -117,6 +117,8 @@ interface EventFields {
   feeCents: number;
   note: string;
   description: string;
+  /** An example listing the store has not confirmed. Shown with a "Sample" badge. */
+  sample?: boolean;
 }
 
 /** A single dated event stored directly (one-off). */

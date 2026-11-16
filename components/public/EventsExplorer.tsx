@@ -68,6 +68,7 @@ export function EventCard({
           <Heading className={styles.title}>
             <Link href={`/events/${event.slug}`}>{event.title}</Link>
           </Heading>
+          {event.sample && <span className="sample">Sample listing</span>}
           <div className={styles.info}>
             {formatEventDate(event, 'EEEE, MMM d')} · {formatTime(event.startTime)} –{' '}
             {formatTime(event.endTime)}
@@ -171,7 +172,7 @@ export function EventsExplorer({
       )}
       <p className={styles.fineprint}>
         <span className="sample">
-          Example schedule. Real dates, costs and seats come from the store.
+          Events marked Sample are examples. Real dates, costs and seats come from the store.
         </span>
       </p>
       <p className={styles.fee2}>Fees are paid at the counter. No online payment.</p>

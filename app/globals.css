@@ -105,11 +105,6 @@ svg {
 }
 
 .sample {
-  /* Sample-data notes are for reviewers (?review=1). The footer keeps one quiet note for everyone. */
-  display: none;
-}
-
-body[data-review] .sample {
   display: inline-block;
   font-weight: 700;
   font-size: 12px;
