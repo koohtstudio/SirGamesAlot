@@ -1,5 +1,5 @@
 # Sir Games-A-Lot
- 
+
 Phase 1 clickable mockup for Sir Games-A-Lot, Barrie's independent game and hobby store: a public site (stock
 checker with holds, a basket you pay for at the counter, special orders, events with seats and waitlist, the d20 "take 10% or roll for it", entrance map) and a
 back-office mockup (Today, Online orders, Counter payments, Stock, Holds & orders, Events, Customers, Outbox, Settings). **All data is sample data.**
