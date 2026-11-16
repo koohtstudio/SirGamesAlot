@@ -2,6 +2,7 @@ import { ButtonLink } from '@/components/ui/Button';
 import { STORE } from '@/lib/content/store';
 import type { Settings } from '@/lib/domain/types';
 import { CopyAddress } from './CopyAddress';
+import { EntranceGate } from './EntranceGate';
 import { EntranceMap } from './EntranceMap';
 import { HoursCard } from './HoursCard';
 import styles from './Visit.module.css';
@@ -17,7 +18,10 @@ export function VisitSection({ settings, nowIso }: { settings: Settings; nowIso:
           <a href={STORE.phoneHref}>{STORE.phone}</a> ·{' '}
           <a href={`mailto:${STORE.email}`}>{STORE.email}</a>
         </p>
-        <EntranceMap />
+        <p className={styles.sizeNote}>{STORE.sizeNote}.</p>
+        <EntranceGate initialBanner={settings.banner}>
+          <EntranceMap />
+        </EntranceGate>
         <div className={styles.social}>
           <CopyAddress />
           <ButtonLink size="sm" variant="white" href={STORE.facebook} external>

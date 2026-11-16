@@ -7,7 +7,9 @@ import { MainNav } from './MainNav';
 import { OpenNow } from './OpenNow';
 import styles from './SiteHeader.module.css';
 
-export function DemoRibbon() {
+/** Shown only in ?review=1 mode, so visitors never see "concept" wording. The footer keeps a quiet sample-data note. */
+export function DemoRibbon({ review }: { review: boolean }) {
+  if (!review) return null;
   return (
     <div className={styles.ribbon}>
       <span>
@@ -30,7 +32,11 @@ export function SiteHeader({ settings, nowIso }: { settings: Settings; nowIso: s
           <div className={styles.right}>
             <OpenNow initialSettings={settings} initialNowIso={nowIso} />
             <a className={styles.phone} href={STORE.phoneHref}>
-              {STORE.phone}
+              <span className={styles.phoneNum}>{STORE.phone}</span>
+              <span className={styles.phoneCall} aria-hidden="true">
+                Call
+              </span>
+              <span className="sr-only">Call {STORE.phone}</span>
             </a>
           </div>
         </div>

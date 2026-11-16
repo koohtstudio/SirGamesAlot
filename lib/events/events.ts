@@ -32,6 +32,7 @@ function shared(e: OneOffEvent | EventSeries) {
     feeCents: e.feeCents,
     note: e.note,
     description: e.description,
+    sample: e.sample,
   };
 }
 

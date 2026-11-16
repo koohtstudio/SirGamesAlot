@@ -2,12 +2,16 @@ import type { Metadata } from 'next';
 import { EventDetail } from '@/components/public/EventDetail';
 import sections from '@/components/public/Sections.module.css';
 import { JsonLd } from '@/components/ui/JsonLd';
+import { eventPhotoKey, eventFlyerKey, photoLite } from '@/lib/content/photos';
 import { eventJsonLd } from '@/lib/content/seo';
 import { getRepository } from '@/lib/data';
 import { formatEventDate } from '@/lib/events/events';
 import { seatSummary } from '@/lib/events/seats';
 
 type Params = { params: Promise<{ slug: string }> };
+
+/** Real event photo first, flyer second. */
+const photoKey = (e: { id: string; seriesId?: string }) => eventPhotoKey(e) ?? eventFlyerKey(e);
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
@@ -17,6 +21,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: `${event.title}, ${formatEventDate(event, 'MMM d')}`,
     description: `${event.title} at Sir Games-A-Lot in Barrie on ${formatEventDate(event)}. ${event.note}`,
     alternates: { canonical: `/events/${event.slug}` },
+    ...(photoKey(event)
+      ? {
+          openGraph: {
+            images: [
+              { url: photoLite(photoKey(event)!).src, alt: photoLite(photoKey(event)!).alt },
+            ],
+          },
+        }
+      : {}),
   };
 }
 
@@ -35,6 +48,7 @@ export default async function EventPage({ params }: Params) {
           initialEvent={event}
           initialSignups={signups}
           initialNowIso={new Date().toISOString()}
+          photo={event && photoKey(event) ? photoLite(photoKey(event)!) : undefined}
         />
       </div>
     </>

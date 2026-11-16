@@ -1,19 +1,22 @@
 import { addDays } from 'date-fns';
 import { DEFAULT_HOURS } from '@/lib/hours/hours';
 import { nthWeekdayOfMonth } from '@/lib/events/recurrence';
+import { orderTotals } from '@/lib/orders/orders';
 import type {
   BackInStockRequest,
   Customer,
   EventSeries,
   EventSignup,
   Hold,
+  OnlineOrder,
   OneOffEvent,
   Settings,
   SpecialOrder,
 } from '@/lib/domain/types';
 
 export interface DemoState {
-  version: 1;
+  /** Bumped when the shape changes. Older saved demo data is replaced by fresh sample data. */
+  version: 2;
   settings: Settings;
   series: EventSeries[];
   oneOffs: OneOffEvent[];
@@ -22,6 +25,10 @@ export interface DemoState {
   seededEvents: string[];
   holds: Hold[];
   orders: SpecialOrder[];
+  /** Online orders: a basket paid for at the counter. */
+  onlineOrders: OnlineOrder[];
+  /** Last used order number. */
+  orderSeq: number;
   backInStock: BackInStockRequest[];
   customers: Customer[];
   overrides: import('@/lib/domain/types').ProductOverride[];
@@ -30,8 +37,10 @@ export interface DemoState {
 
 export function defaultSettings(): Settings {
   return {
+    // Off by default: the construction notice and Coulter Street entrance came from the old concept and may be
+    // out of date (docs/CONTENT_TODO.md). The owner can switch it on in Admin → Settings.
     banner: {
-      enabled: true,
+      enabled: false,
       headline: "YES, WE'RE OPEN!",
       body: 'Mall construction has closed the main doors. Use the Coulter Street entrance and head to the lower level.',
       linkLabel: 'Entrance map →',
@@ -39,6 +48,12 @@ export function defaultSettings(): Settings {
     },
     weeklyHours: structuredClone(DEFAULT_HOURS),
     holidayOverrides: [
+      {
+        id: 'hol-0',
+        date: '2027-08-02',
+        label: 'Civic Holiday (sample: open regular hours)',
+        hours: { open: '09:30', close: '21:00' },
+      },
       {
         id: 'hol-1',
         date: '2026-12-24',
@@ -49,6 +64,8 @@ export function defaultSettings(): Settings {
       { id: 'hol-3', date: '2027-01-01', label: "New Year's Day (sample)", hours: null },
     ],
     holdHours: 24,
+    onlineOrdersEnabled: true,
+    orderHoldHours: 48,
     d20PromoEnabled: true,
     nextAnniversaryLabel: 'May 2027 · date TBA',
   };
@@ -62,50 +79,26 @@ const series = (): EventSeries[] => [
     rule: { kind: 'nth-weekday', weekday: 6, nth: 3 },
     startTime: '10:00',
     endTime: '18:00',
-    capacity: 16,
+    capacity: 24,
     feeCents: 2500,
-    note: '2,000 points · 3 rounds',
+    sample: true,
+    note: 'Sample date and fee · 24 players at the last one',
     description:
-      'A friendly three-round tournament at 2,000 points. Bring your painted (or not yet painted) army, your codex and your dice. Lunch break between rounds two and three.',
+      'Warhammer 40,000 tournaments run in the store: the last one had 24 players, with casual 40K, an Age of Sigmar league and a D&D table going at the same time. Date, fee and format here are examples until the owner confirms them.',
   },
   {
     id: 'ser-paint',
     title: 'Paint night',
     type: 'paint',
-    rule: { kind: 'last-weekday', weekday: 4 },
-    startTime: '18:00',
-    endTime: '21:00',
+    rule: { kind: 'last-weekday', weekday: 2 },
+    startTime: '17:30',
+    endTime: '20:30',
     capacity: 12,
-    feeCents: 1500,
-    note: 'Paints and a mini included',
+    feeCents: 0,
+    sample: true,
+    note: 'Free with your own paints · $5 rental supplies',
     description:
-      'Pull up a stool at the playspace. Staff show you the basics, you paint a mini from the box and take it home. Great first night for new painters.',
-  },
-  {
-    id: 'ser-riftbound',
-    title: 'Riftbound league night',
-    type: 'cards',
-    rule: { kind: 'nth-weekday', weekday: 5, nth: 2 },
-    startTime: '18:00',
-    endTime: '22:00',
-    capacity: 24,
-    feeCents: 1000,
-    note: 'League of Legends TCG · prize support',
-    description:
-      'Monthly league play for the Riftbound trading card game, with prize support. New players are welcome; ask staff for a learn-to-play deck.',
-  },
-  {
-    id: 'ser-dnd',
-    title: 'D&D one-shot',
-    type: 'dnd',
-    rule: { kind: 'weekly', weekday: 5 },
-    startTime: '18:30',
-    endTime: '22:00',
-    capacity: 6,
-    feeCents: 1000,
-    note: 'New players welcome',
-    description:
-      'A self-contained Dungeons & Dragons adventure run by a store DM. Characters and dice are provided, so you can just show up and play.',
+      'Our monthly Paint Night, on a Tuesday from 5:30 to 8:30. Work on anything: Warhammer, D&D, Middle-earth, Battletech, historical minis or minis from board games. Newcomers and veteran painters are both welcome, and staff can show you paint thinning, contrast painting, shading, dry-brushing, highlighting and slap-chop. Rental supplies are $5 if you have none; bring your own paints and brushes and it is free. Which Tuesday of the month and the seat count are examples until confirmed.',
   },
 ];
 
@@ -131,9 +124,10 @@ const oneOffs = (now: Date): OneOffEvent[] => [
     endTime: '17:00',
     capacity: 0,
     feeCents: 0,
-    note: 'Sales, vendors, cosplay contest · d20 discounts',
+    sample: true,
+    note: 'Sample date · sales, vendors, cosplay contest',
     description:
-      'Our holiday shopping day: sales, vendors, snacks, a cosplay contest, and the d20 "take 10% or roll for it" discounts. Drop in any time.',
+      'Last year the store ran a November event on Saturday, Nov 15 with local vendors for Christmas gifts, gaming, snacks, sales and a cosplay contest at 2 pm. This date is an example for this year. Flyers say: take 10% off, or roll a d20 for a chance at 1 to 20% off.',
   },
   {
     id: 'evt-past-21',
@@ -146,7 +140,8 @@ const oneOffs = (now: Date): OneOffEvent[] => [
     capacity: 0,
     feeCents: 0,
     note: 'Cosplay contest at 2 pm',
-    description: 'Sales, vendors, gaming, snacks and a cosplay contest.',
+    description:
+      'Anniversary event with sales, vendors, gaming, snacks and a cosplay contest at 2 pm. $5 off for anyone in costume, and take 10% off or roll a d20 for 1 to 20% off.',
   },
   {
     id: 'evt-past-nbc',
@@ -158,21 +153,37 @@ const oneOffs = (now: Date): OneOffEvent[] => [
     endTime: '17:00',
     capacity: 0,
     feeCents: 0,
-    note: '10 am to 5 pm',
-    description: 'A seasonal in-store event.',
+    note: 'Cosplay contest at 2 pm',
+    description:
+      'The Nightmare Before Christmas event: sales, gaming, a vendor and craft show, snacks and a cosplay contest at 2 pm, with Doug Laurie Sports and local vendors. Lower level of the Bayfield Mall, 10 am to 5 pm.',
   },
   {
     id: 'evt-past-20',
-    slug: '20th-anniversary-event-2025-05-03',
+    slug: 'anniversary-event-2025-05-03',
     date: '2025-05-03',
-    title: '20th Anniversary Event',
+    title: 'Anniversary Event',
     type: 'store',
     startTime: '10:00',
     endTime: '17:00',
     capacity: 0,
     feeCents: 0,
     note: 'Cosplay contest at 3:30 pm',
-    description: 'Sales, vendors, gaming, snacks and a cosplay contest.',
+    description:
+      'The annual anniversary event at the new lower-level location: sales, vendors, gaming and snacks all day, a cosplay contest at 3:30 pm, an extra $5 off for anyone in costume and the famous Take 10 sale. Doug Laurie Sports held its grand opening across the way.',
+  },
+  {
+    id: 'evt-past-may4',
+    slug: 'may-the-fourth-event-2024-05-04',
+    date: '2024-05-04',
+    title: 'May the Fourth Event',
+    type: 'store',
+    startTime: '10:00',
+    endTime: '16:00',
+    capacity: 0,
+    feeCents: 0,
+    note: 'Star Wars meet-up at 2 pm · cosplay contest at 2:30 pm',
+    description:
+      'Cosplay, gaming, vendors, sales and snacks from 10 to 4, a Star Wars photo meet-up at 2 pm and a free cosplay contest at 2:30 pm. $5 off any purchase in costume, plus the Take 10 sale.',
   },
 ];
 
@@ -240,6 +251,89 @@ export function buildSeed(now: Date): DemoState {
       note: '',
       createdAt: mins(now, -6 * 24 * 60),
       stage: 'arrived',
+    },
+  ];
+  const line = (sku: string, name: string, unitPriceCents: number, qty: number) => ({
+    sku,
+    name,
+    unitPriceCents,
+    qty,
+  });
+  const holdMs = (h: number) => h * 3_600_000;
+  const readyAt = mins(now, -3 * 60);
+  const catan = [line('BG-CATAN', 'Catan', 6499, 1)];
+  const phb = [line('DD-PHB', "D&D Player's Handbook", 6999, 1)];
+  const onlineOrders: OnlineOrder[] = [
+    {
+      id: 'oo-seed-1',
+      number: 'SGL-1001',
+      name: 'Sample: Jordan',
+      phone: '705-555-0123',
+      note: 'Please bag the paints separately.',
+      lines: [line('PT-LEADBELCHER', 'Leadbelcher', 725, 2), line('PT-NULN', 'Nuln Oil', 1075, 1)],
+      status: 'placed',
+      createdAt: mins(now, -2 * 60),
+    },
+    {
+      id: 'oo-seed-2',
+      number: 'SGL-1002',
+      name: 'Sample: Priya',
+      email: 'sample-priya@example.invalid',
+      lines: [line('WH-CODEX-SM', 'Codex: Space Marines', 7500, 1)],
+      status: 'ready',
+      createdAt: mins(now, -26 * 60),
+      readyAt,
+      holdUntil: new Date(new Date(readyAt).getTime() + holdMs(48)).toISOString(),
+    },
+    {
+      id: 'oo-seed-3',
+      number: 'SGL-1003',
+      name: 'Sample: Sam',
+      phone: '705-555-0188',
+      lines: catan,
+      status: 'completed',
+      createdAt: mins(now, -5 * 60),
+      readyAt: mins(now, -4 * 60),
+      holdUntil: mins(now, 44 * 60),
+      completedAt: mins(now, -30),
+      payment: {
+        method: 'cash',
+        amountCents: orderTotals(catan).totalCents,
+        tenderedCents: 8000,
+        takenAt: mins(now, -30),
+        takenBy: 'staff',
+      },
+    },
+    {
+      id: 'oo-seed-4',
+      number: 'SGL-1004',
+      name: 'Sample: Morgan',
+      phone: '705-555-0147',
+      lines: phb,
+      status: 'completed',
+      createdAt: mins(now, -50 * 60),
+      readyAt: mins(now, -48 * 60),
+      holdUntil: mins(now, 0),
+      completedAt: mins(now, -26 * 60),
+      payment: {
+        method: 'debit',
+        amountCents: orderTotals(phb).totalCents,
+        reference: '4821',
+        takenAt: mins(now, -26 * 60),
+        takenBy: 'owner',
+      },
+    },
+    {
+      id: 'oo-seed-5',
+      number: 'SGL-1005',
+      name: 'Sample: Quinn',
+      email: 'sample-quinn@example.invalid',
+      lines: [line('BG-WINGSPAN', 'Wingspan', 7999, 1)],
+      status: 'cancelled',
+      createdAt: mins(now, -8 * 60),
+      cancelledAt: mins(now, -5 * 60),
+      cancelledBy: 'customer',
+      cancelReason: 'Found a copy as a gift.',
     },
   ];
   const backInStock: BackInStockRequest[] = [
@@ -352,7 +446,7 @@ export function buildSeed(now: Date): DemoState {
     },
   ];
   return {
-    version: 1,
+    version: 2,
     settings: defaultSettings(),
     series: series(),
     oneOffs: oneOffs(now),
@@ -360,6 +454,8 @@ export function buildSeed(now: Date): DemoState {
     seededEvents: [],
     holds,
     orders,
+    onlineOrders,
+    orderSeq: 1005,
     backInStock,
     customers,
     overrides: [],

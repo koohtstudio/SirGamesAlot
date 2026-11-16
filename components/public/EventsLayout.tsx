@@ -1,3 +1,4 @@
+import { eventPhotos } from '@/lib/content/photos';
 import type { EventSignup, StoreEvent } from '@/lib/domain/types';
 import { AnniversaryFlyer } from './AnniversaryFlyer';
 import { EventHistory } from './EventHistory';
@@ -21,13 +22,18 @@ export function EventsLayout({
     <div className={styles.grid}>
       <div>
         <AnniversaryFlyer initialLabel={anniversaryLabel} />
-        <EventHistory initialEvents={events} initialNowIso={nowIso} />
+        <EventHistory
+          initialEvents={events}
+          initialNowIso={nowIso}
+          flyers={eventPhotos(events, 'flyer')}
+        />
       </div>
       <EventsExplorer
         initialEvents={events}
         initialSignups={signups}
         initialNowIso={nowIso}
         limit={limit}
+        photos={eventPhotos(events, 'card')}
       />
     </div>
   );

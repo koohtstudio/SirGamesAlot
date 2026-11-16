@@ -30,8 +30,8 @@ export default async function StockPage({
   return (
     <>
       <PageHero kicker="Stock checker" title="Got it? Check before you drive.">
-        Search a paint, codex, book or booster. Hold it at the counter for {settings.holdHours}{' '}
-        hours, order it in, or ask us to tell you when it&apos;s back.
+        Search a paint, codex, book or booster. Hold it for {settings.holdHours} hours, add it to a
+        basket and pay at the counter, order it in, or ask us to tell you when it&apos;s back.
       </PageHero>
       <div className={`wrap ${sections.pageBody}`}>
         <StockChecker

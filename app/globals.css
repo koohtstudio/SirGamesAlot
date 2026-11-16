@@ -19,6 +19,15 @@
   --display: var(--font-archivo-black), 'Arial Black', Impact, sans-serif;
   --body: var(--font-archivo), system-ui, -apple-system, sans-serif;
   --comic: var(--font-bangers), var(--font-archivo-black), Impact, sans-serif;
+  /* One spacing scale, one card radius (square, on purpose: comic panels) and one border weight. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 48px;
+  --space-7: 64px;
+  --border: 3px;
   color-scheme: light;
 }
 
@@ -27,7 +36,7 @@
 }
 
 html {
-  scroll-padding-top: 12px;
+  scroll-padding-top: 88px;
   -webkit-text-size-adjust: 100%;
 }
 

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { expectNoSeriousA11yIssues, signInAs, trackErrors } from './helpers';
 
-const PUBLIC_PAGES = ['/', '/stock', '/events', '/visit', '/special-order'];
+const PUBLIC_PAGES = ['/', '/stock', '/events', '/visit', '/special-order', '/basket'];
 
 for (const path of PUBLIC_PAGES) {
   test(`public page ${path}: loads, has landmarks, one h1, no console/CSP errors, axe clean`, async ({
@@ -70,6 +70,8 @@ test.describe('admin pages', () => {
     '/admin/today',
     '/admin/stock',
     '/admin/holds',
+    '/admin/orders',
+    '/admin/payments',
     '/admin/events',
     '/admin/customers',
     '/admin/outbox',

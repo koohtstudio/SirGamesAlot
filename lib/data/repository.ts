@@ -1,5 +1,7 @@
 import type {
   BackInStockInput,
+  BasketOrderInput,
+  CounterPaymentInput,
   EventFormInput,
   HoldRequest,
   OrderRequest,
@@ -13,9 +15,11 @@ import type {
   Hold,
   HoldStatus,
   Interest,
+  OnlineOrder,
   OrderStage,
   OutboxMessage,
   ProductOverride,
+  Role,
   Settings,
   SignupStatus,
   SpecialOrder,
@@ -36,6 +40,7 @@ export class RepositoryError extends Error {
 export type HoldInput = HoldRequest & { productName: string; interest?: Interest };
 export type BackInStockCreate = BackInStockInput & { productName: string; interest?: Interest };
 export type OrderInput = OrderRequest & { interest?: Interest };
+export type BasketOrderCreate = BasketOrderInput;
 
 export interface SignupResult {
   signup: EventSignup;
@@ -66,6 +71,23 @@ export interface DataRepository {
   listSpecialOrders(): Promise<SpecialOrder[]>;
   createSpecialOrder(input: OrderInput): Promise<SpecialOrder>;
   setOrderStage(id: string, stage: OrderStage): Promise<void>;
+
+  // Online orders: a basket paid for at the counter. Names and prices always come from the POS, never the browser.
+  listOnlineOrders(): Promise<OnlineOrder[]>;
+  /** Looked up by the unguessable id in the customer's link. Null when there is no such order. */
+  getOnlineOrder(id: string): Promise<OnlineOrder | null>;
+  createOnlineOrder(input: BasketOrderCreate): Promise<OnlineOrder>;
+  /** SKU → units held by open orders, so the website never sells the same unit twice. No personal data. */
+  listReservedQuantities(): Promise<Record<string, number>>;
+  /** placed → ready. Starts the pickup hold and queues the "ready" email. */
+  markOrderReady(id: string): Promise<OnlineOrder>;
+  /** ready → completed. Records what was taken at the counter. The amount is always the order total. */
+  takeCounterPayment(id: string, input: CounterPaymentInput, by: Role): Promise<OnlineOrder>;
+  /** Owner only: undo a payment taken by mistake. completed → ready. */
+  voidCounterPayment(id: string): Promise<OnlineOrder>;
+  /** placed or ready → cancelled. Releases the held stock. */
+  cancelOnlineOrder(id: string, by: 'customer' | 'staff', reason?: string): Promise<OnlineOrder>;
+  setOrderStaffNote(id: string, note: string): Promise<void>;
 
   // "Tell me when it's back"
   listBackInStock(): Promise<BackInStockRequest[]>;

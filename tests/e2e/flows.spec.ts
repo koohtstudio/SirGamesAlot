@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { signInAs } from './helpers';
+import { expectNoSeriousA11yIssues, signInAs } from './helpers';
 
 test('a hold from the public stock checker shows up in admin Holds', async ({ page }) => {
   await page.goto('/stock');
@@ -95,9 +95,12 @@ test('a full event offers the waitlist, and admin can promote when a seat opens'
   page,
 }) => {
   await page.goto('/events');
-  const card = page.getByTestId('event-card').filter({ hasText: 'D&D one-shot' }).first();
+  const card = page
+    .getByTestId('event-card')
+    .filter({ hasText: 'Warhammer 40K tournament' })
+    .first();
   await expect(card.getByTestId('seat-text')).toContainText('Full');
-  await card.getByRole('button', { name: /^Join the waitlist: D&D one-shot/ }).click();
+  await card.getByRole('button', { name: /^Join the waitlist: Warhammer 40K tournament/ }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Your name').fill('Wait Lister');
   await dialog.getByLabel('Email').fill('wait@example.test');
@@ -106,7 +109,7 @@ test('a full event offers the waitlist, and admin can promote when a seat opens'
   await dialog.getByRole('button', { name: 'Close', exact: true }).last().click();
 
   // The same email cannot take a second spot.
-  await card.getByRole('button', { name: /^Join the waitlist: D&D one-shot/ }).click();
+  await card.getByRole('button', { name: /^Join the waitlist: Warhammer 40K tournament/ }).click();
   await dialog.getByLabel('Your name').fill('Wait Lister');
   await dialog.getByLabel('Email').fill('WAIT@example.test');
   await dialog.getByRole('button', { name: 'Save my seat' }).click();
@@ -117,7 +120,7 @@ test('a full event offers the waitlist, and admin can promote when a seat opens'
 
   await signInAs(page, 'Owner', '/admin/events');
   await page
-    .getByRole('button', { name: /Manage sign-ups for D&D one-shot/ })
+    .getByRole('button', { name: /Manage sign-ups for Warhammer 40K tournament/ })
     .first()
     .click();
   const waitRow = page.getByTestId('attendee-row').filter({ hasText: 'Wait Lister' });
@@ -138,28 +141,33 @@ test('past events never show as upcoming; they are in the history strip', async 
   const cards = page.getByTestId('event-card');
   await expect(cards.first()).toBeVisible();
   const all = await cards.allTextContents();
-  expect(all.join(' ')).not.toMatch(/21st Anniversary|Nightmare Before Christmas|20th Anniversary/);
+  expect(all.join(' ')).not.toMatch(/Anniversary Event|Nightmare Before Christmas/);
   const history = page.getByRole('region', { name: 'Event history' });
   await expect(history).toContainText('21st Anniversary Event');
   await expect(history).toContainText('Nightmare Before Christmas Event');
   await expect(page.getByText(/Next: May 2027 · date TBA/)).toBeVisible();
 });
 
-test('turning the construction banner off in Settings hides it on the site', async ({ page }) => {
+test('the construction banner is off by default, and Settings can turn it on and off', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.getByTestId('construction-banner')).toHaveCount(0);
+  await page.goto('/visit');
+  await expect(page.getByRole('img', { name: /how to reach Sir Games-A-Lot/ })).toHaveCount(0);
+  await signInAs(page, 'Owner', '/admin/settings');
+  await page.getByLabel('Show the banner on the public site').check();
   await page.goto('/');
   await expect(page.getByTestId('construction-banner')).toBeVisible();
-  await signInAs(page, 'Owner', '/admin/settings');
+  await page.goto('/visit');
+  await expect(page.getByRole('img', { name: /how to reach Sir Games-A-Lot/ })).toBeVisible();
+  await page.goto('/admin/settings');
   await page.getByLabel('Show the banner on the public site').uncheck();
   await expect(page.getByTestId('toast')).toContainText('Banner is off');
   await page.goto('/');
   await expect(page.getByTestId('construction-banner')).toHaveCount(0);
   await page.goto('/visit');
   await expect(page.getByTestId('construction-banner')).toHaveCount(0);
-
-  await page.goto('/admin/settings');
-  await page.getByLabel('Show the banner on the public site').check();
-  await page.goto('/');
-  await expect(page.getByTestId('construction-banner')).toBeVisible();
 });
 
 test('staff cannot see Settings or export; owner can', async ({ page }) => {
@@ -243,7 +251,6 @@ test('hours: open-now indicator and weekly table', async ({ page }) => {
   await expect(rows).toHaveCount(7);
   await expect(page.getByRole('row', { name: /Monday.*9:30 am – 9 pm/ })).toBeVisible();
   await expect(page.getByRole('row', { name: /Sunday.*11 am – 5 pm/ })).toBeVisible();
-  await expect(page.getByRole('img', { name: /how to reach Sir Games-A-Lot/ })).toBeVisible();
 });
 
 test('?review=1 shows [verify] tags and ?review=0 hides them', async ({ page }) => {
@@ -298,7 +305,7 @@ test('reset demo data restores the samples', async ({ page }) => {
 
 test('layout has no horizontal scroll at 360px', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
-  for (const path of ['/', '/stock', '/events', '/visit']) {
+  for (const path of ['/', '/stock', '/events', '/visit', '/basket']) {
     await page.goto(path);
     await page.waitForLoadState('networkidle');
     const overflow = await page.evaluate(
@@ -306,4 +313,180 @@ test('layout has no horizontal scroll at 360px', async ({ page }) => {
     );
     expect(overflow, `horizontal overflow on ${path}`).toBeLessThanOrEqual(0);
   }
+});
+
+test.describe('online orders: basket online, pay at the counter', () => {
+  async function addToBasket(
+    page: import('@playwright/test').Page,
+    search: string,
+    name: string,
+    times = 1,
+  ) {
+    await page.goto('/stock');
+    await page.getByRole('searchbox', { name: 'Search stock' }).fill(search);
+    for (let i = 0; i < times; i += 1) {
+      await page
+        .getByRole('button', {
+          name: new RegExp(`^(Add to basket|Add another).*: ${name}|^Add to basket: ${name}`),
+        })
+        .first()
+        .click();
+    }
+  }
+
+  async function placeOrder(page: import('@playwright/test').Page, who = 'Basket Buyer') {
+    await page.getByRole('link', { name: /View basket and pay at the counter/ }).click();
+    await page.getByLabel('Your name').fill(who);
+    await page.getByLabel('Phone').fill('705-555-0177');
+    await page.getByRole('button', { name: 'Place order' }).click();
+  }
+
+  test('basket → ready → paid in cash at the counter → counter payments', async ({ page }) => {
+    await addToBasket(page, 'leadbelcher', 'Leadbelcher', 2);
+    await expect(page.getByRole('region', { name: 'Basket' })).toContainText('Basket · 2 items');
+    await page.getByRole('link', { name: /View basket and pay at the counter/ }).click();
+    await expect(page.getByTestId('basket-line')).toHaveCount(1);
+    // 2 x $7.25 = $14.50, HST $1.89 (rounded once), total $16.39
+    await expect(page.getByTestId('basket-total')).toHaveText('$16.39');
+    await expect(page.getByText('Nothing is charged online.').first()).toBeVisible();
+    await page.getByLabel('Your name').fill('Basket Buyer');
+    await page.getByLabel('Phone').fill('705-555-0177');
+    await page.getByRole('button', { name: 'Place order' }).click();
+    await expect(page.getByRole('heading', { name: 'Order SGL-1006 received' })).toBeVisible();
+    await page.getByRole('link', { name: 'See your order' }).click();
+    await expect(page.getByRole('heading', { name: /Order SGL-1006 · To prepare/ })).toBeVisible();
+    await expect(page.getByText('Pay at the counter.').first()).toBeVisible();
+
+    await signInAs(page, 'Staff', '/admin/orders');
+    const card = page.getByTestId('online-order').filter({ hasText: 'SGL-1006' });
+    await expect(card).toContainText('Basket Buyer');
+    await expect(card).toContainText('$16.39');
+    await card.getByRole('button', { name: 'Mark ready: SGL-1006' }).click();
+    await page.getByRole('button', { name: /^Ready for pickup/ }).click();
+    await card.getByRole('button', { name: 'Take payment for SGL-1006' }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByTestId('pay-total')).toHaveText('$16.39');
+    await dialog.getByLabel('Cash', { exact: true }).check();
+    await dialog.getByLabel('Cash handed over ($)').fill('10');
+    await expect(dialog.getByText(/Not enough/)).toBeVisible();
+    await dialog.getByLabel('Cash handed over ($)').fill('20');
+    await expect(dialog.getByText('Change due: $3.61')).toBeVisible();
+    await dialog.getByRole('button', { name: 'Payment taken, complete order' }).click();
+    await expect(page.getByTestId('toast')).toContainText('paid at the counter');
+
+    await page.goto('/admin/payments');
+    const row = page.getByTestId('payment-row').filter({ hasText: 'SGL-1006' });
+    await expect(row).toContainText('Cash');
+    await expect(row).toContainText('$16.39');
+    await expect(page.getByRole('heading', { name: 'Payments (2)' })).toBeVisible();
+
+    await page.goto('/stock'); // the customer's order page also shows it as done
+    await page.goBack();
+  });
+
+  test('stock held by an open order is not sold twice', async ({ page }) => {
+    await addToBasket(page, 'wingspan', 'Wingspan', 2); // only 2 on the shelf
+    await expect(page.getByText('2 in your basket')).toBeVisible();
+    await placeOrder(page);
+    await expect(page.getByRole('heading', { name: /received/ })).toBeVisible();
+    await page.goto('/stock');
+    await page.getByRole('searchbox', { name: 'Search stock' }).fill('wingspan');
+    await expect(page.getByText('All reserved')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Add to basket: Wingspan/ })).toHaveCount(0);
+  });
+
+  test('items with no online price or no stock cannot be added', async ({ page }) => {
+    await page.goto('/stock');
+    await page.getByRole('searchbox', { name: 'Search stock' }).fill('armageddon');
+    await expect(page.getByRole('button', { name: /^Add to basket/ })).toHaveCount(0);
+    await page.getByRole('searchbox', { name: 'Search stock' }).fill('codenames');
+    await expect(page.getByRole('button', { name: /^Add to basket/ })).toHaveCount(0);
+  });
+
+  test('the basket explains problems and the form validates', async ({ page }) => {
+    await addToBasket(page, 'dice', 'Polyhedral dice set');
+    await page.getByRole('link', { name: /View basket and pay at the counter/ }).click();
+    await page.getByRole('button', { name: 'Place order' }).click();
+    await expect(page.getByText('Please enter your name.')).toBeVisible();
+    await expect(
+      page.getByText('Add a phone number or an email so we can reach you.'),
+    ).toBeVisible();
+    await page.getByRole('button', { name: /^One more / }).click();
+    await expect(page.getByLabel(/ quantity$/)).toHaveText('2');
+    await page.getByRole('button', { name: /^Remove / }).click();
+    await expect(page.getByText('Your basket is empty.')).toBeVisible();
+  });
+
+  test('a customer can cancel an order that has not been prepared', async ({ page }) => {
+    await addToBasket(page, 'dice', 'Polyhedral dice set');
+    await placeOrder(page);
+    await page.getByRole('link', { name: 'See your order' }).click();
+    await page.getByRole('button', { name: 'Cancel this order' }).click();
+    await page.getByRole('button', { name: 'Yes, cancel my order' }).click();
+    await expect(page.getByText(/This order was cancelled/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Cancel this order' })).toHaveCount(0);
+  });
+
+  test('staff can cancel with a reason, and it releases the stock', async ({ page }) => {
+    await signInAs(page, 'Staff', '/admin/orders');
+    const card = page.getByTestId('online-order').filter({ hasText: 'SGL-1001' });
+    await card.getByRole('button', { name: 'Cancel order: SGL-1001' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Reason').selectOption('Item not available');
+    await dialog.getByRole('button', { name: 'Cancel order and release the items' }).click();
+    await expect(page.getByTestId('toast')).toContainText('SGL-1001 cancelled');
+    await page.getByRole('button', { name: /^Cancelled/ }).click();
+    await expect(page.getByTestId('online-order').filter({ hasText: 'SGL-1001' })).toContainText(
+      'Item not available',
+    );
+  });
+
+  test('only the owner can undo a payment', async ({ page }) => {
+    await signInAs(page, 'Staff', '/admin/orders');
+    await page.getByRole('button', { name: /^Paid and picked up/ }).click();
+    await expect(page.getByText('Only the owner can undo a payment.').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Undo payment on/ })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Switch role' }).click();
+    await page.getByRole('button', { name: /^Owner/ }).click();
+    await page.getByRole('button', { name: /^Paid and picked up/ }).click();
+    await page.getByRole('button', { name: 'Undo payment on SGL-1003' }).click();
+    await page.getByRole('button', { name: 'Yes, undo payment on SGL-1003' }).click();
+    await expect(page.getByTestId('toast')).toContainText('back to ready');
+  });
+
+  test('the owner can pause online orders in Settings', async ({ page }) => {
+    await signInAs(page, 'Owner', '/admin/settings');
+    await page.getByLabel('Accept online orders').uncheck();
+    await expect(page.getByTestId('toast')).toContainText('Online orders are paused');
+    await page.goto('/stock');
+    await page.getByRole('searchbox', { name: 'Search stock' }).fill('leadbelcher');
+    await expect(page.getByRole('button', { name: /^Hold it: Leadbelcher/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Add to basket/ })).toHaveCount(0);
+    await page.goto('/basket');
+    await expect(page.getByText('Online orders are paused right now.')).toBeVisible();
+  });
+
+  test('basket and order pages are axe clean', async ({ page }) => {
+    await addToBasket(page, 'leadbelcher', 'Leadbelcher');
+    await page.getByRole('link', { name: /View basket and pay at the counter/ }).click();
+    await page.waitForLoadState('networkidle');
+    await expectNoSeriousA11yIssues(page);
+    await page.getByLabel('Your name').fill('Axe Buyer');
+    await page.getByLabel('Phone').fill('705-555-0166');
+    await page.getByRole('button', { name: 'Place order' }).click();
+    await page.getByRole('link', { name: 'See your order' }).click();
+    await expect(page.getByRole('heading', { name: /Order SGL-/ })).toBeVisible();
+    await expectNoSeriousA11yIssues(page);
+  });
+});
+
+test('unconfirmed events and the sample stock are labelled for everyone, not just reviewers', async ({
+  page,
+}) => {
+  await page.goto('/events');
+  await expect(page.getByText('Sample listing').first()).toBeVisible();
+  await expect(page.getByText(/Events marked Sample are examples/)).toBeVisible();
+  await expect(page.getByText('Riftbound league night')).toHaveCount(0);
+  await page.goto('/stock');
+  await expect(page.getByText(/Sample stock and prices/)).toBeVisible();
 });

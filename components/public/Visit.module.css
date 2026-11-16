@@ -108,6 +108,18 @@
   margin: 10px 0 0;
 }
 
+.sizeNote,
+.findNote {
+  margin-top: 8px;
+  font-size: 15px;
+}
+
+.findNote {
+  border: 2px dashed var(--soft);
+  padding: 10px 12px;
+  background: var(--cream);
+}
+
 .map svg {
   width: 100%;
   height: auto;
@@ -130,8 +142,14 @@
 .photos {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 24px;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+  list-style: none;
+  padding: 0;
+}
+
+.photos > * {
+  min-width: 0;
 }
 
 @media (max-width: 860px) {

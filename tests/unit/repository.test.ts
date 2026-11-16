@@ -192,10 +192,10 @@ describe('special orders and back-in-stock', () => {
 });
 
 describe('events and seats', () => {
-  const FULL_ID = 'ser-dnd__2026-11-13';
+  const FULL_ID = 'ser-40k__2026-11-21';
 
-  it('seeds the first D&D one-shot as full so the waitlist flow is visible', async () => {
-    expect((await repo.listSignups(FULL_ID)).filter((s) => s.status === 'seated')).toHaveLength(6);
+  it('seeds the first 40K tournament as full so the waitlist flow is visible', async () => {
+    expect((await repo.listSignups(FULL_ID)).filter((s) => s.status === 'seated')).toHaveLength(24);
   });
   it('seats someone when there is room', async () => {
     const evt = (await repo.listEvents()).find((e) => e.seriesId === 'ser-paint')!;

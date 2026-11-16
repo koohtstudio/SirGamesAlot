@@ -38,6 +38,10 @@ export function SettingsPage() {
       <BannerForm key={JSON.stringify(settings.banner)} banner={settings.banner} />
       <HoursForm key={JSON.stringify(settings.weeklyHours)} hours={settings.weeklyHours} />
       <HolidayForm holidays={settings.holidayOverrides} />
+      <OrdersForm
+        key={`${settings.onlineOrdersEnabled}|${settings.orderHoldHours}`}
+        settings={settings}
+      />
       <MiscForm
         key={`${settings.holdHours}|${settings.nextAnniversaryLabel}`}
         settings={settings}
@@ -392,6 +396,68 @@ function MiscForm({ settings }: { settings: Settings }) {
         <label htmlFor={`${id}-d20`}>“Take 10% off, or roll for it” is running</label>
       </div>
       <div className={styles.actions}>
+        <ABtn kind="primary" onClick={save}>
+          Save
+        </ABtn>
+      </div>
+    </Panel>
+  );
+}
+
+function OrdersForm({ settings }: { settings: Settings }) {
+  const id = useId().replace(/:/g, '');
+  const toast = useToast();
+  const [hours, setHours] = useState(String(settings.orderHoldHours));
+  const [on, setOn] = useState(settings.onlineOrdersEnabled);
+  const [error, setError] = useState('');
+
+  async function save() {
+    const h = Number(hours);
+    if (!Number.isInteger(h) || h < 1 || h > 336)
+      return setError('Pickup hold must be a whole number of hours, from 1 to 336.');
+    setError('');
+    await getRepository().updateSettings({ orderHoldHours: h });
+    toast('Saved.');
+  }
+
+  return (
+    <Panel id="online-orders" title="Online orders (pay at the counter)">
+      <p className={styles.note} style={{ marginBottom: 12 }}>
+        Customers add in-stock items to a basket and pay in the store. Nothing is charged online.
+        Turn this off to hide the basket buttons while you catch up. People can still hold items.
+      </p>
+      <div className={styles.toggle} style={{ marginBottom: 14 }}>
+        <input
+          id={`${id}-on`}
+          type="checkbox"
+          checked={on}
+          onChange={async (e) => {
+            const next = e.target.checked;
+            setOn(next);
+            await getRepository().updateSettings({ onlineOrdersEnabled: next });
+            toast(
+              next
+                ? 'Online orders are on.'
+                : 'Online orders are paused. The basket buttons are hidden.',
+            );
+          }}
+        />
+        <label htmlFor={`${id}-on`}>Accept online orders</label>
+      </div>
+      <div className={styles.formGrid}>
+        <TextField
+          id={`${id}-hold`}
+          label="Keep a ready order for (hours)"
+          hint="After this it shows as past pickup time. You decide whether to cancel it."
+          type="number"
+          min={1}
+          max={336}
+          value={hours}
+          error={error}
+          onChange={(e) => setHours(e.target.value)}
+        />
+      </div>
+      <div className={styles.actions} style={{ marginTop: 12 }}>
         <ABtn kind="primary" onClick={save}>
           Save
         </ABtn>

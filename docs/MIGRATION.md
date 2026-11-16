@@ -7,7 +7,7 @@
 2. **Accounts in the client's name** (below). Kooht is added as a collaborator.
 3. **Database**: write SQL migrations for `staff`, `products_cache`, `product_overrides`, `holds`, `special_orders`,
    `back_in_stock_requests`, `events`, `event_recurrences`, `event_signups`, `customers`, `consents`, `settings`,
-   `message_log`, `audit_log`. Turn on RLS and write policies per role. See SECURITY.md.
+   `message_log`, `audit_log`, `online_orders`, `online_order_lines`, `counter_payments`. Turn on RLS and write policies per role. See SECURITY.md.
 4. **`SupabaseRepository`** implementing `DataRepository` (`lib/data/repository.ts`). Every method already exists
    in the mock with the same behaviour; the unit tests in `tests/unit/repository.test.ts` become the contract test
    suite, run against both implementations.
@@ -20,7 +20,11 @@
    `products_cache`, real `lastSyncedAt()`.
 6. **Email** via Resend on `mail.<domain>` with SPF, DKIM and DMARC. Replace "Would send in the full build" with real
    sends; keep the outbox as `message_log`.
-7. **Server routes** for hold, order, back-in-stock and sign-up with zod, rate limiting and Turnstile.
+   - Online orders: `createOnlineOrder` becomes one Postgres function that reads prices and counts from
+     `products_cache`, checks `reserved` quantities and inserts the order and its lines in a single transaction, so two
+     shoppers can never take the last unit. Order numbers come from a sequence. `counter_payments` is append-only; undoing
+     a payment writes a reversal row and an `audit_log` entry instead of deleting. See [ORDERS.md](ORDERS.md).
+7. **Server routes** for hold, order, basket checkout, back-in-stock and sign-up with zod, rate limiting and Turnstile.
 8. **Switch** `NEXT_PUBLIC_DATA_SOURCE=supabase`. Replace the mock-only code paths:
    - server pages call the real repository (no seed fallback);
    - `lib/data/hooks.ts` can subscribe to Supabase Realtime or poll;

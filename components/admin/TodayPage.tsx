@@ -10,12 +10,16 @@ import type {
   BackInStockRequest,
   EventSignup,
   Hold,
+  OnlineOrder,
   Product,
   SpecialOrder,
   StoreEvent,
 } from '@/lib/domain/types';
 import { seatSummary } from '@/lib/events/seats';
 import { STORE_TZ, formatTime } from '@/lib/hours/hours';
+import { formatCents } from '@/lib/money';
+import { isOverdue, summarizePayments } from '@/lib/orders/orders';
+import { paidInRange } from '@/lib/orders/range';
 import { loadProducts } from '@/lib/stock/catalog';
 import { STATUS_META } from '@/lib/stock/status';
 import { ABtn, Badge, Empty, PageTitle, Panel, Stat, ago, contactOf, when } from './AdminUi';
@@ -25,6 +29,7 @@ export function TodayPage() {
   const toast = useToast();
   const now = useNow(new Date().toISOString(), 30_000);
   const holds = useRepoData<Hold[] | null>((r) => r.listHolds(), null);
+  const onlineOrders = useRepoData<OnlineOrder[] | null>((r) => r.listOnlineOrders(), null);
   const orders = useRepoData<SpecialOrder[] | null>((r) => r.listSpecialOrders(), null);
   const waitlists = useRepoData<BackInStockRequest[] | null>((r) => r.listBackInStock(), null);
   const events = useRepoData<StoreEvent[] | null>((r) => r.listEvents(), null);
@@ -48,7 +53,13 @@ export function TodayPage() {
   const lowStock = useMemo(() => (products ?? []).filter((p) => p.status !== 'in'), [products]);
   const waiting = useMemo(() => (waitlists ?? []).filter((w) => !w.notifiedAt), [waitlists]);
 
-  if (!holds || !orders || !events || !signups || !products || !waitlists) return <p>Loading…</p>;
+  if (!holds || !orders || !onlineOrders || !events || !signups || !products || !waitlists)
+    return <p>Loading…</p>;
+
+  const toPrepare = onlineOrders.filter((o) => o.status === 'placed');
+  const readyOrders = onlineOrders.filter((o) => o.status === 'ready');
+  const lateOrders = readyOrders.filter((o) => isOverdue(o, now));
+  const takenToday = summarizePayments(paidInRange(onlineOrders, 'today', now));
 
   return (
     <>
@@ -57,6 +68,17 @@ export function TodayPage() {
       </PageTitle>
 
       <div className={styles.stats}>
+        <Stat
+          label="Online orders to prepare"
+          value={toPrepare.length}
+          tone={toPrepare.length ? 'warn' : undefined}
+        />
+        <Stat
+          label="Online orders ready"
+          value={readyOrders.length}
+          tone={lateOrders.length ? 'bad' : readyOrders.length ? 'info' : undefined}
+        />
+        <Stat label="Taken at the counter today" value={formatCents(takenToday.totalCents)} />
         <Stat
           label="Holds to pull"
           value={toPull.length}
@@ -71,6 +93,40 @@ export function TodayPage() {
         <Stat label="Events today" value={todaysEvents.length} />
         <Stat label="Low or out of stock" value={lowStock.length} />
       </div>
+
+      <Panel
+        id="online"
+        title="Online orders"
+        action={<Link href="/admin/orders">All orders</Link>}
+      >
+        {toPrepare.length === 0 && readyOrders.length === 0 ? (
+          <Empty>No online orders waiting.</Empty>
+        ) : (
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
+            {toPrepare.map((o) => (
+              <li key={o.id}>
+                <Badge tone="warn">To prepare</Badge> <b>{o.number}</b> · {o.name}
+                <br />
+                <span className={styles.note}>
+                  {o.lines.reduce((n, l) => n + l.qty, 0)} items · placed {ago(o.createdAt)}
+                </span>
+              </li>
+            ))}
+            {readyOrders.map((o) => (
+              <li key={o.id}>
+                <Badge tone={isOverdue(o, now) ? 'bad' : 'info'}>
+                  {isOverdue(o, now) ? 'Past pickup time' : 'Ready, waiting'}
+                </Badge>{' '}
+                <b>{o.number}</b> · {o.name}
+                <br />
+                <span className={styles.note}>
+                  {o.holdUntil ? `kept until ${when(o.holdUntil)}` : ''}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Panel>
 
       <div className={styles.grid2}>
         <Panel id="pull" title="Holds to pull" action={<Link href="/admin/holds">All holds</Link>}>

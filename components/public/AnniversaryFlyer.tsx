@@ -32,8 +32,9 @@ export function AnniversaryFlyer({ initialLabel }: { initialLabel: string }) {
       </div>
       <div className={styles.p3}>
         <b>Come in costume</b>
-        An extra $5 off for anyone in cosplay, all day. Any theme.{' '}
-        <Verify note="is the $5 cosplay discount still on?" />
+        $5 off for anyone in cosplay who makes a purchase. Plus take 10% off, or roll a d20 for 1 to
+        20% off.{' '}
+        <Verify note="is the $5 cosplay discount still on, and the exact take-10 / d20 rules?" />
       </div>
     </div>
   );

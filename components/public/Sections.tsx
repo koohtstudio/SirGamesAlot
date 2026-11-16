@@ -1,9 +1,13 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ButtonLink } from '@/components/ui/Button';
+import { Photo } from '@/components/ui/Photo';
 import { SignText } from '@/components/ui/Sign';
 import { Verify } from '@/components/ui/Verify';
-import type { Category } from '@/lib/domain/types';
+import { PAINTED_SET } from '@/lib/content/photos';
+import { STORE } from '@/lib/content/store';
+import type { Category, Settings } from '@/lib/domain/types';
+import { HeroStatus } from './HeroStatus';
 import styles from './Sections.module.css';
 
 export function SectionHeader({
@@ -49,7 +53,7 @@ export function PageHero({
   );
 }
 
-export function Hero() {
+export function Hero({ settings, nowIso }: { settings: Settings; nowIso: string }) {
   return (
     <div className={styles.hero} id="home">
       <div className={styles.banner}>
@@ -61,47 +65,30 @@ export function Hero() {
         </div>
       </div>
       <div className={`wrap ${styles.heroBody}`}>
-        <div>
-          <h2>
+        <div className={styles.heroText}>
+          <p className={styles.heroLead}>
             Barrie&apos;s game shop for <em>20+ years.</em>
-          </h2>
-          <p>
-            Board games, D&amp;D, Warhammer, miniature paints and everything that goes with them.
-            Lower level of the Bayfield Mall, next to Bowlerama and Service Ontario.
+          </p>
+          <p className={styles.heroCopy}>
+            Board games, D&amp;D, Warhammer, miniature paints and everything that goes with them.{' '}
+            {STORE.locationNote}. <Verify note="location wording" />
           </p>
           <div className={styles.ctas}>
             <ButtonLink href="/stock">Check stock</ButtonLink>
-            <ButtonLink href="/events" variant="blue">
-              See events
+            <ButtonLink href="/visit" variant="blue">
+              Visit
             </ButtonLink>
           </div>
+          <HeroStatus initialSettings={settings} initialNowIso={nowIso} />
         </div>
-        <dl className={styles.creds}>
-          <div>
-            <dt>21</dt>
-            <dd>
-              years in Barrie
-              <br />
-              (since 2005) <Verify note='"21 years"' />
-            </dd>
-          </div>
-          <div>
-            <dt>94%</dt>
-            <dd>
-              recommend us
-              <br />
-              101 Facebook reviews <Verify note="94% and 101 reviews" />
-            </dd>
-          </div>
-          <div>
-            <dt>3.5K</dt>
-            <dd>
-              local gamers follow
-              <br />
-              our weekly updates <Verify note="3.5K followers" />
-            </dd>
-          </div>
-        </dl>
+        <Photo
+          name="storefront"
+          priority
+          tilt
+          sizes="(max-width: 860px) 100vw, 540px"
+          caption="Lower level of Bayfield Mall, 320 Bayfield St"
+          className={styles.heroPhoto}
+        />
       </div>
     </div>
   );
@@ -158,8 +145,8 @@ const AISLES: { tag: string; title: string; text: string; note: string; category
   },
   {
     tag: 'Play',
-    title: 'The playspace',
-    text: 'Tables in the store to learn a game, paint, or play a match.',
+    title: 'The gaming room',
+    text: 'A games room inside the store: tables to learn a game, paint, or play a match.',
     note: 'Free to use',
   },
 ];
@@ -178,8 +165,8 @@ export function Aisles() {
             ) : (
               a.note
             )}
-            {a.tag === 'Warhammer' || a.tag === 'D&D' || a.tag === 'Cards' ? (
-              <Verify note="new arrivals" />
+            {a.tag === 'Warhammer' || a.tag === 'D&D' || a.tag === 'Cards' || a.tag === 'Play' ? (
+              <Verify note={a.tag === 'Play' ? 'free to use' : 'new arrivals'} />
             ) : null}
           </span>
         </li>
@@ -188,28 +175,75 @@ export function Aisles() {
   );
 }
 
+/** Two real shop photos above the aisle cards. */
+export function AisleTour() {
+  return (
+    <div className={styles.tour}>
+      <Photo
+        name="shelves"
+        ratio="4 / 3"
+        focus="50% 45%"
+        tilt
+        sizes="(max-width: 860px) 100vw, 560px"
+        caption="Board games wall to wall, with the paint wall next door"
+      />
+      <Photo
+        name="aisle"
+        ratio="4 / 3"
+        focus="50% 58%"
+        sizes="(max-width: 860px) 100vw, 560px"
+        caption="Down the aisle: games on one side, paints and hobby tools on the other"
+      />
+    </div>
+  );
+}
+
 export function Reviews() {
   return (
     <ul className={styles.revs}>
       <li className={styles.rv}>
-        <span className={styles.bigNum}>94%</span>
-        <q>recommend us</q>
+        <span className={styles.bigNum}>{STORE.googleRating}</span>
+        <q>stars on Google</q>
         <span className={styles.who}>
-          101 reviews on Facebook <Verify note="count and percentage" />
+          {STORE.googleReviewCount} Google reviews{' '}
+          <Verify note="rating and count, refresh before launch" />
         </span>
       </li>
       <li className={styles.rv}>
-        <q>Excellent service, selection, prices, hours and playspace.</q>
+        <q>Tons of variety, staff are super helpful and friendly and know their stuff.</q>
         <span className={styles.who}>
-          Facebook review <Verify note="quote and permission to use it" />
+          Google review <Verify note="permission to use the quote" />
         </span>
       </li>
       <li className={styles.rv}>
-        <q>Staff is great, selection is huge.</q>
+        <q>Awesome and knowledgeable staff, great atmosphere and prices, lots of products.</q>
         <span className={styles.who}>
-          Facebook review <Verify note="quote and permission to use it" />
+          Google review <Verify note="permission to use the quote" />
         </span>
       </li>
     </ul>
+  );
+}
+
+/** Painted minis. Credit is the shop and nothing more. */
+export function PaintedGallery() {
+  return (
+    <div>
+      <ul className={styles.gallery}>
+        {PAINTED_SET.map((name) => (
+          <li key={name}>
+            <Photo
+              name={name}
+              ratio="1 / 1"
+              focus={name === 'orkSquad' ? '50% 40%' : undefined}
+              sizes="(max-width: 480px) 50vw, (max-width: 860px) 33vw, 360px"
+            />
+          </li>
+        ))}
+      </ul>
+      <p className={styles.galleryNote}>
+        Painted in the shop. <Verify note="who painted these and OK to show them" />
+      </p>
+    </div>
   );
 }

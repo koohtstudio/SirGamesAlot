@@ -3,7 +3,10 @@
 import dynamic from 'next/dynamic';
 import { useId, useMemo, useState } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
+import { useCart } from '@/lib/cart/useCart';
 import { useIdlePrefetch, useRepoData } from '@/lib/data/hooks';
+import { availableQty, unorderableReason } from '@/lib/orders/orders';
+import { useToast } from '@/components/ui/Toast';
 import { CATEGORIES, type Category, type Product, type Settings } from '@/lib/domain/types';
 import { STORE_TZ } from '@/lib/hours/hours';
 import { formatPrice } from '@/lib/money';
@@ -34,6 +37,33 @@ function syncedLabel(synced: Date | null, now: Date): string {
   return `Counts updated ${formatInTimeZone(synced, STORE_TZ, 'MMM d')} at ${time}`;
 }
 
+function BasketButton({
+  product,
+  max,
+  inBasket,
+  onAdd,
+}: {
+  product: Product;
+  max: number;
+  inBasket: number;
+  onAdd: (max: number) => void;
+}) {
+  if (max <= 0) return <span className={styles.reserved}>All reserved</span>;
+  if (inBasket >= max) {
+    return <span className={styles.reserved}>{inBasket} in your basket</span>;
+  }
+  return (
+    <Button
+      size="sm"
+      variant="blue"
+      onClick={() => onAdd(max)}
+      aria-label={`Add to basket: ${product.name}`}
+    >
+      {inBasket > 0 ? `Add another (${inBasket})` : 'Add to basket'}
+    </Button>
+  );
+}
+
 export function StockChecker({
   initialProducts,
   initialSettings,
@@ -52,6 +82,9 @@ export function StockChecker({
   const settings = useRepoData((repo) => repo.getSettings(), initialSettings);
   const synced = useRepoData((_repo, source) => source.lastSyncedAt(), null as Date | null);
 
+  const cart = useCart();
+  const toast = useToast();
+  const reserved = useRepoData((r) => r.listReservedQuantities(), {} as Record<string, number>);
   const [q, setQ] = useState('');
   const [category, setCategory] = useState<Category | 'All'>(initialCategory);
   const [sort, setSort] = useState<SortKey>('name');
@@ -122,6 +155,12 @@ export function StockChecker({
         ))}
       </div>
 
+      <p className={styles.note}>
+        <span className="sample">
+          Sample stock and prices. The live version syncs with the store&apos;s real counts.
+        </span>
+      </p>
+
       <div className={styles.meta}>
         <span role="status" aria-live="polite">
           {all.length === products.length
@@ -163,6 +202,17 @@ export function StockChecker({
                       ? requestDoneLabel(doneMode, settings.holdHours)
                       : requestIdleLabel(meta.action)}
                   </Button>
+                  {settings.onlineOrdersEnabled && !unorderableReason(p) && (
+                    <BasketButton
+                      product={p}
+                      max={availableQty(p, reserved[p.sku] ?? 0)}
+                      inBasket={cart.lines.find((l) => l.sku === p.sku)?.qty ?? 0}
+                      onAdd={(max) => {
+                        cart.add(p.sku, 1, max);
+                        toast(`Added ${p.name} to your basket.`);
+                      }}
+                    />
+                  )}
                 </div>
                 <div className={styles.where} id={`${uid}-${p.sku}`}>
                   <span aria-hidden="true">📍 </span>
@@ -182,15 +232,10 @@ export function StockChecker({
           </Button>
         </p>
       )}
-      <p className={styles.note}>
-        <span className="sample">
-          Demo shows sample stock and prices. The live version syncs with the store&apos;s real
-          counts.
-        </span>
-      </p>
+
       <p className={styles.fine}>
-        Prices are before HST (13%). Holds are kept for {settings.holdHours} hours. No online
-        payment; you pay at the counter.
+        Prices are before HST (13%). Holds are kept for {settings.holdHours} hours. Baskets are paid
+        for at the counter when you pick up. No online payment.
       </p>
 
       {dialog && (
